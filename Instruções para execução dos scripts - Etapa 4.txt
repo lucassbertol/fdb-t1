@@ -1,0 +1,19 @@
+COMO EXECUTAR OS SCRIPTS DA ETAPA 4:
+
+ETAPA 4_1:
+Instale as dependências:
+pip install mysql-connector-python
+
+Execute no terminal:
+python Etapa4_1_carga_inicial.py
+
+OBS.: Lembre-se de alterar a configuração para usuário e senha do seu MySQL.
+
+
+ETAPA 4_2:
+OPÇÃO 1:
+Abra o arquivo "Etapa4_2_migracao_normalizada.sql" pelo MySQL Workbench e execute o script.
+
+OPÇÃO 2:
+Execute no terminal:
+mysql -u SEU_USUARIO -p < Etapa4_2_migracao_normalizada.sql

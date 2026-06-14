@@ -1,13 +1,13 @@
--- =============================================================
--- ETAPA 4 – SEGUNDA PARTE: SCRIPT SQL DE TRANSFORMAÇÃO E CARGA
--- =============================================================
+-- ETAPA 4 – SEGUNDA PARTE: SCRIPT SQL PARA QUE OS DADOS DA TABELA DESNORMALIZADA SEJAM COPIADOS PARA AS
+-- RESPECTIVAS TABELAS NORMALIZADAS
 USE trabalho_final_fdb_normalizado;
 
--- Desativa checagens de chaves estrangeiras para acelerar a carga em lote
+-- desativa checagens de chaves estrangeiras (p/ acelerar a carga em lote) e sql_safe_updates (p/ limpar tabelas)
 SET foreign_key_checks = 0;
+SET SQL_SAFE_UPDATES = 0;
 SET group_concat_max_len = 1048576;
 
--- Limpa os dados antigos para evitar duplicações se rodar o script novamente
+-- limpa os dados antigos para evitar duplicações se rodar o script novamente
 TRUNCATE TABLE game_developers;
 TRUNCATE TABLE game_publishers;
 TRUNCATE TABLE game_genres;
@@ -25,9 +25,7 @@ DELETE FROM categories;
 DELETE FROM tags;
 DELETE FROM languages;
 
--- =================================================================
 -- 1. CARGA DA TABELA PRINCIPAL: GAMES
--- =================================================================
 INSERT IGNORE INTO games (
     app_id, name, release_date,
     estimated_owners_min, estimated_owners_max,
@@ -72,10 +70,8 @@ FROM trabalho_final_fdb_desnormalizado.games r
 WHERE r.app_id IS NOT NULL;
 
 
--- =================================================================
 -- 2. NORMALIZAÇÃO: DEVELOPERS
--- =================================================================
--- 2.1 Tabela Dimensão (Nomes Únicos)
+-- 2.1 tabela dimensão (nomes únicos)
 INSERT IGNORE INTO developers (name)
 SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.developers, ',', n.n), ',', -1)) AS nome_dev
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -85,7 +81,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.developers IS NOT NULL AND TRIM(t.developers) != ''
 HAVING nome_dev != '';
 
--- 2.2 Tabela Associativa (Relacionamento N:M)
+-- 2.2 tabela associativa (relacionamento N:M)
 INSERT IGNORE INTO game_developers (app_id, developer_id)
 SELECT t.app_id, d.developer_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -97,10 +93,8 @@ JOIN developers d
 WHERE t.developers IS NOT NULL AND TRIM(t.developers) != '' AND t.app_id IS NOT NULL;
 
 
--- =================================================================
 -- 3. NORMALIZAÇÃO: PUBLISHERS
--- =================================================================
--- 3.1 Tabela Dimensão
+-- 3.1 tabela dimensão
 INSERT IGNORE INTO publishers (name)
 SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.publishers, ',', n.n), ',', -1)) AS nome_pub
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -110,7 +104,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.publishers IS NOT NULL AND TRIM(t.publishers) != ''
 HAVING nome_pub != '';
 
--- 3.2 Tabela Associativa
+-- 3.2 tabela associativa
 INSERT IGNORE INTO game_publishers (app_id, publisher_id)
 SELECT t.app_id, p.publisher_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -122,10 +116,8 @@ JOIN publishers p
 WHERE t.publishers IS NOT NULL AND TRIM(t.publishers) != '' AND t.app_id IS NOT NULL;
 
 
--- =================================================================
 -- 4. NORMALIZAÇÃO: GENRES
--- =================================================================
--- 4.1 Tabela Dimensão
+-- 4.1 tabela dimensão
 INSERT IGNORE INTO genres (name)
 SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.genres, ',', n.n), ',', -1)) AS nome_genre
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -135,7 +127,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.genres IS NOT NULL AND TRIM(t.genres) != ''
 HAVING nome_genre != '';
 
--- 4.2 Tabela Associativa
+-- 4.2 tabela associativa
 INSERT IGNORE INTO game_genres (app_id, genre_id)
 SELECT t.app_id, g.genre_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -147,10 +139,8 @@ JOIN genres g
 WHERE t.genres IS NOT NULL AND TRIM(t.genres) != '' AND t.app_id IS NOT NULL;
 
 
--- =================================================================
 -- 5. NORMALIZAÇÃO: CATEGORIES
--- =================================================================
--- 5.1 Tabela Dimensão
+-- 5.1 tabela dimensão
 INSERT IGNORE INTO categories (name)
 SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.categories, ',', n.n), ',', -1)) AS nome_cat
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -161,7 +151,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.categories IS NOT NULL AND TRIM(t.categories) != ''
 HAVING nome_cat != '';
 
--- 5.2 Tabela Associativa
+-- 5.2 tabela associativa
 INSERT IGNORE INTO game_categories (app_id, category_id)
 SELECT t.app_id, c.category_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -174,10 +164,9 @@ JOIN categories c
 WHERE t.categories IS NOT NULL AND TRIM(t.categories) != '' AND t.app_id IS NOT NULL;
 
 
--- =================================================================
+
 -- 6. NORMALIZAÇÃO: TAGS
--- =================================================================
--- 6.1 Tabela Dimensão
+-- 6.1 tabela dimensão
 INSERT IGNORE INTO tags (name)
 SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.tags, ',', n.n), ',', -1)) AS nome_tag
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -189,7 +178,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.tags IS NOT NULL AND TRIM(t.tags) != ''
 HAVING nome_tag != '';
 
--- 6.2 Tabela Associativa
+-- 6.2 tabela associativa
 INSERT IGNORE INTO game_tags (app_id, tag_id)
 SELECT t.app_id, tg.tag_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -203,11 +192,9 @@ JOIN tags tg
 WHERE t.tags IS NOT NULL AND TRIM(t.tags) != '' AND t.app_id IS NOT NULL;
 
 
--- =================================================================
 -- 7. NORMALIZAÇÃO: LANGUAGES
--- Remove colchetes e aspas das listas Python gravadas no CSV original
--- =================================================================
--- 7.1 Cadastra idiomas de 'supported_languages'
+-- remove colchetes e aspas das listas Python gravadas no CSV original
+-- 7.1 cadastra idiomas de 'supported_languages'
 INSERT IGNORE INTO languages (name)
 SELECT DISTINCT TRIM(REPLACE(REPLACE(
     SUBSTRING_INDEX(SUBSTRING_INDEX(
@@ -223,7 +210,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.supported_languages IS NOT NULL AND TRIM(t.supported_languages) NOT IN ('', '[]')
 HAVING nome_lang != '';
 
--- 7.2 Cadastra idiomas adicionais de 'full_audio_languages'
+-- 7.2 cadastra idiomas adicionais de 'full_audio_languages'
 INSERT IGNORE INTO languages (name)
 SELECT DISTINCT TRIM(REPLACE(REPLACE(
     SUBSTRING_INDEX(SUBSTRING_INDEX(
@@ -237,7 +224,7 @@ JOIN (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 WHERE t.full_audio_languages IS NOT NULL AND TRIM(t.full_audio_languages) NOT IN ('', '[]')
 HAVING nome_lang_audio != '';
 
--- 7.3 Associativa: Idiomas suportados
+-- 7.3 associativa: idiomas suportados
 INSERT IGNORE INTO game_supported_languages (app_id, language_id)
 SELECT t.app_id, l.language_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -253,7 +240,7 @@ JOIN languages l ON l.name = TRIM(REPLACE(REPLACE(
     "'", ''), '"', ''))
 WHERE t.supported_languages IS NOT NULL AND TRIM(t.supported_languages) NOT IN ('', '[]') AND t.app_id IS NOT NULL;
 
--- 7.4 Associativa: Idiomas com áudio completo
+-- 7.4 associativa: idiomas com áudio completo
 INSERT IGNORE INTO game_audio_languages (app_id, language_id)
 SELECT t.app_id, l.language_id
 FROM trabalho_final_fdb_desnormalizado.games t
@@ -268,9 +255,7 @@ JOIN languages l ON l.name = TRIM(REPLACE(REPLACE(
 WHERE t.full_audio_languages IS NOT NULL AND TRIM(t.full_audio_languages) NOT IN ('', '[]') AND t.app_id IS NOT NULL;
 
 
--- =================================================================
 -- 8. ENTIDADES DEPENDENTES: SCREENSHOTS
--- =================================================================
 INSERT IGNORE INTO screenshots (app_id, url)
 SELECT t.app_id,
        TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.screenshots, ',', n.n), ',', -1)) AS url_print
@@ -284,9 +269,7 @@ WHERE t.screenshots IS NOT NULL AND TRIM(t.screenshots) != '' AND t.app_id IS NO
 HAVING url_print LIKE 'http%';
 
 
--- =================================================================
 -- 9. ENTIDADES DEPENDENTES: MOVIES
--- =================================================================
 INSERT IGNORE INTO movies (app_id, url)
 SELECT t.app_id,
        TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(t.movies, ',', n.n), ',', -1)) AS url_movie
@@ -298,15 +281,12 @@ WHERE t.movies IS NOT NULL AND TRIM(t.movies) != '' AND t.app_id IS NOT NULL
 HAVING url_movie LIKE 'http%';
 
 
--- =================================================================
--- 10. REATIVAR INTEGRIDADE REFERENCIAL
--- =================================================================
+-- 10. REATIVAR INTEGRIDADE REFERENCIAL (foreign_key_checks e sql_safe_updates)
 SET foreign_key_checks = 1;
+SET SQL_SAFE_UPDATES = 1;
 
 
--- =================================================================
 -- 11. CONTAGEM AUDITORIA FINAL
--- =================================================================
 SELECT 'games'                       AS tabela, COUNT(*) AS registros FROM games
 UNION ALL SELECT 'developers',                  COUNT(*) FROM developers
 UNION ALL SELECT 'game_developers',             COUNT(*) FROM game_developers
@@ -316,5 +296,4 @@ UNION ALL SELECT 'genres',                      COUNT(*) FROM genres
 UNION ALL SELECT 'game_genres',                 COUNT(*) FROM game_genres
 UNION ALL SELECT 'categories',                  COUNT(*) FROM categories
 UNION ALL SELECT 'game_categories',             COUNT(*) FROM game_categories
-UNION ALL SELECT 'tags',                        COUNT(*) FROM tags
--- UNION ALL SELECT 'game_tags',                   COUNT(*) FROM game_tags;
+UNION ALL SELECT 'tags',                        COUNT(*) FROM tags;
