@@ -51,56 +51,11 @@ Desenvolvido como trabalho final da disciplina de **Fundamentos de Banco de Dado
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- MySQL Server
-- Python 3.8+
-- pip
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/lucassbertol/fdb-t1
-cd fdb-t1
-```
-
-### 2. Crie o banco de dados desnormalizado
-
-```bash
-mysql -u root -p < sql/desnormalizado.sql
-```
-
-### 3. Instale as dependências do script Python
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Popule o banco desnormalizado a partir do CSV
-
-```bash
-python insert_csv.py
-```
-
-### 5. Crie o banco de dados normalizado
-
-```bash
-mysql -u root -p < sql/normalizado.sql
-```
-
-### 6. Migre os dados do banco desnormalizado para o normalizado
-
-```bash
-mysql -u root -p < sql/migracao.sql
-```
-
-Após esses passos, o banco normalizado estará pronto para a execução das consultas.
-
----
-
 ## 🖼️ Diagramas
+
+<img width="2871" height="1526" alt="ModeloDER - Trabalho FDB" src="https://github.com/user-attachments/assets/bdd8edff-18e9-4091-a3a4-d79ca29598b6" />
+
+<img width="1580" height="1031" alt="Modelo_Engenharia_Reversa_Workbench" src="https://github.com/user-attachments/assets/81c15981-e69a-4670-b50a-272de63640c2" />
 
 ---
 
